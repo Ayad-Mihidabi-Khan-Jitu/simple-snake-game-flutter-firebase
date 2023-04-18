@@ -8,10 +8,12 @@ class SnakePixel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(2.0),
+      padding: const EdgeInsets.all(1.0),
       child: Container(
+        height: 1,
+        width: 1,
         decoration: BoxDecoration(
-            color: listposi.last==curr? Colors.red:Colors.white,
+            color: listposi.last==curr? Colors.red:Colors.limeAccent,
             borderRadius: BorderRadius.circular(4)
 
         ),

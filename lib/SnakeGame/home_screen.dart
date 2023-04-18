@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -20,7 +21,7 @@ enum SnakeDirection { UP, DOWN, LEFT, RIGHT }
 
 class _HomeScreenState extends State<HomeScreen> {
   //Grid Dimensions
-  int rowSize = 12;
+  int rowSize = 15;
   late int totalNumberOfSquares = rowSize * rowSize;
 
   //game has started
@@ -47,10 +48,32 @@ class _HomeScreenState extends State<HomeScreen> {
   List<String> highScoreDocIds = [];
   late final Future? letsGetDocIds;
 
+  //initialize bg music
+  AssetsAudioPlayer audioPlayer = AssetsAudioPlayer();
+  AssetsAudioPlayer audioPlayer1 = AssetsAudioPlayer();
+
   @override
   void initState() {
+    audioPlayer.open(
+      Audio('assets/musics/8-bit-Sheriff.mp3'),
+      loopMode: LoopMode.single,
+      volume: 0.5,
+      autoStart: false,
+      showNotification: false,
+    );
+    audioPlayer1.open(
+      Audio('assets/musics/game-over.wav'),
+      volume: 0.5,
+      autoStart: false,
+      showNotification: false,
+    );
     letsGetDocIds = getDocId();
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   //getting the doc ids from firestore
@@ -68,6 +91,7 @@ class _HomeScreenState extends State<HomeScreen> {
   //start game function
   void startGame() {
     gameHasStarted = true;
+    audioPlayer.play();
     Timer.periodic(const Duration(milliseconds: 200), (timer) {
       setState(() {
         //keep the snake moving
@@ -77,6 +101,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
         //is game over
         if (isGameOver()) {
+          audioPlayer.stop();
+          audioPlayer1.play();
           //stop the timer
           timer.cancel();
           //display a message to the player
@@ -147,7 +173,8 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  void stopGame(){
+  void stopGame() {
+    audioPlayer.stop();
     time.cancel();
     newGame();
   }
@@ -160,17 +187,19 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void howtoplay(){
+  void howtoplay() {
     showDialog(
         context: context,
         barrierDismissible: false,
         builder: (context) {
           return AlertDialog(
             backgroundColor: Colors.white,
-            title: const Text('How to control the Snake',style: TextStyle(fontWeight: FontWeight.bold,color: Colors.pink)),
+            title: const Text('How to control the Snake',
+                style:
+                    TextStyle(fontWeight: FontWeight.bold, color: Colors.pink)),
             content: SizedBox(
               height: 300,
-              child: Image.asset('assets/ins.PNG'),
+              child: Image.asset('assets/images/ins.PNG'),
             ),
             actions: [
               MaterialButton(
@@ -254,138 +283,153 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: RawKeyboardListener(
-        focusNode: FocusNode(),
-        autofocus: true,
-        onKey: (event){
-          if(event.isKeyPressed(LogicalKeyboardKey.keyI) && currentDirection!= SnakeDirection.DOWN)
-          {
-            currentDirection = SnakeDirection.UP;
-          }
-          else if(event.isKeyPressed(LogicalKeyboardKey.keyK) && currentDirection!= SnakeDirection.UP)
-          {
-            currentDirection = SnakeDirection.DOWN;
-          }
-          else if(event.isKeyPressed(LogicalKeyboardKey.keyJ) && currentDirection!= SnakeDirection.RIGHT)
-          {
-            currentDirection = SnakeDirection.LEFT;
-          }
-          else if(event.isKeyPressed(LogicalKeyboardKey.keyL) && currentDirection!= SnakeDirection.LEFT){
-            currentDirection = SnakeDirection.RIGHT;
-          }
-
-        },
-        child: SizedBox(
-          width: screenWidth > 428 ? 428 : screenWidth,
-          child: Column(children: [
-            //Your Score & HighScore
-            Expanded(
-              flex: 2,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text('Your Score', style: TextStyle(fontSize: 15)),
-                      Text(currentScore.toString(),
-                          style: const TextStyle(fontSize: 15,fontWeight: FontWeight.bold,color: Colors.yellow)),
-                    ],
-                  ),
-                  const SizedBox(height:50, child: VerticalDivider(thickness: 2, color: Colors.white)),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text('Top Scores'),
-                      SizedBox(
-                        height: 100,
-                        width: 105,
-                        child: gameHasStarted
+    double screenHeight = MediaQuery.of(context).size.height;
+    return SafeArea(
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: RawKeyboardListener(
+          focusNode: FocusNode(),
+          autofocus: true,
+          onKey: (event) {
+            if (event.isKeyPressed(LogicalKeyboardKey.keyI) &&
+                currentDirection != SnakeDirection.DOWN) {
+              currentDirection = SnakeDirection.UP;
+            } else if (event.isKeyPressed(LogicalKeyboardKey.keyK) &&
+                currentDirection != SnakeDirection.UP) {
+              currentDirection = SnakeDirection.DOWN;
+            } else if (event.isKeyPressed(LogicalKeyboardKey.keyJ) &&
+                currentDirection != SnakeDirection.RIGHT) {
+              currentDirection = SnakeDirection.LEFT;
+            } else if (event.isKeyPressed(LogicalKeyboardKey.keyL) &&
+                currentDirection != SnakeDirection.LEFT) {
+              currentDirection = SnakeDirection.RIGHT;
+            }
+          },
+          child: SizedBox(
+            width: screenWidth > 428 ? 428 : screenWidth,
+            //height: screenHeight > 500 ? 500 : screenHeight,
+            child: Column(children: [
+              //Your Score & HighScore
+              Expanded(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text('Your Score',
+                            style: TextStyle(fontSize: 15)),
+                        Text(currentScore.toString(),
+                            style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.yellow)),
+                      ],
+                    ),
+                    const SizedBox(
+                        height: 50,
+                        child:
+                            VerticalDivider(thickness: 2, color: Colors.white)),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text('Top 5 Scores'),
+                        SizedBox(
+                          height: 100,
+                          width: 105,
+                          child: gameHasStarted
                               ? Container()
                               : FutureBuilder(
                                   future: letsGetDocIds,
                                   builder: (context, snapshot) {
                                     return ListView.builder(
+                                      shrinkWrap: true,
+                                        scrollDirection: Axis.vertical,
                                         itemCount: highScoreDocIds.length,
                                         itemBuilder: (context, index) {
                                           return HighScoreTile(
-                                              documentId: highScoreDocIds[index]);
+                                              documentId:
+                                                  highScoreDocIds[index]);
                                         });
                                   }),
-                      ),
-                    ],
-                  )
-                ],
-              ),
-            ),
-
-            //GameGrid
-            Expanded(
-              flex: 4,
-              child: GestureDetector(
-                onVerticalDragUpdate: (details) {
-                  if (details.delta.dy > 0 &&
-                      currentDirection != SnakeDirection.UP) {
-                    debugPrint('Swapped down');
-                    currentDirection = SnakeDirection.DOWN;
-                  } else if (details.delta.dy < 0 &&
-                      currentDirection != SnakeDirection.DOWN) {
-                    debugPrint('Swapped up');
-                    currentDirection = SnakeDirection.UP;
-                  }
-                },
-                onHorizontalDragUpdate: (details) {
-                  if (details.delta.dx > 0 &&
-                      currentDirection != SnakeDirection.LEFT) {
-                    debugPrint('Swapped right');
-                    currentDirection = SnakeDirection.RIGHT;
-                  } else if (details.delta.dx < 0 &&
-                      currentDirection != SnakeDirection.RIGHT) {
-                    debugPrint('Swapped left');
-                    currentDirection = SnakeDirection.LEFT;
-                  }
-                },
-                child: GridView.builder(
-                  itemCount: totalNumberOfSquares,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: rowSize),
-                  itemBuilder: (context, index) {
-                    if (snakePosition.contains(index)) {
-                      return SnakePixel(
-                        listposi: snakePosition,
-                        curr: index,
-                      );
-                    } else if (foodPosition == index) {
-                      return const FoodPixel();
-                    } else {
-                      return const BlankPixel();
-                    }
-                  },
+                        ),
+                      ],
+                    )
+                  ],
                 ),
               ),
-            ),
 
-            //PlayButton
-            Expanded(
-              child: Center(
-                child: MaterialButton(
-                  color: gameHasStarted ? Colors.orange : Colors.pink,
-                  onPressed: gameHasStarted ? () => stopGame() : (){
-                      howtoplay();
-                      //startGame();
+              //GameGrid
+              Expanded(
+                flex: 4,
+                child: GestureDetector(
+                  onVerticalDragUpdate: (details) {
+                    if (details.delta.dy > 0 &&
+                        currentDirection != SnakeDirection.UP) {
+                      debugPrint('Swapped down');
+                      currentDirection = SnakeDirection.DOWN;
+                    } else if (details.delta.dy < 0 &&
+                        currentDirection != SnakeDirection.DOWN) {
+                      debugPrint('Swapped up');
+                      currentDirection = SnakeDirection.UP;
+                    }
                   },
-                  child: Padding(
-                    padding: EdgeInsets.only(top: 5, bottom: 8),
-                    child: Text(gameHasStarted ? 'Stop': 'Play', style: TextStyle(fontSize: 20)),
+                  onHorizontalDragUpdate: (details) {
+                    if (details.delta.dx > 0 &&
+                        currentDirection != SnakeDirection.LEFT) {
+                      debugPrint('Swapped right');
+                      currentDirection = SnakeDirection.RIGHT;
+                    } else if (details.delta.dx < 0 &&
+                        currentDirection != SnakeDirection.RIGHT) {
+                      debugPrint('Swapped left');
+                      currentDirection = SnakeDirection.LEFT;
+                    }
+                  },
+                  child: GridView.builder(
+                    shrinkWrap: true,
+                    itemCount: totalNumberOfSquares,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: rowSize),
+                    itemBuilder: (context, index) {
+                      if (snakePosition.contains(index)) {
+                        return SnakePixel(
+                          listposi: snakePosition,
+                          curr: index,
+                        );
+                      } else if (foodPosition == index) {
+                        return const FoodPixel();
+                      } else {
+                        return const BlankPixel();
+                      }
+                    },
                   ),
                 ),
               ),
-            ),
-            Text('বাগ থাকলে জিতুকে জানাও', style: TextStyle(fontSize: 15,color: Colors.grey[600])),
-          ]),
+
+              //PlayButton
+              Expanded(
+                child: Center(
+                  child: MaterialButton(
+                    color: gameHasStarted ? Colors.deepOrange : Colors.pink,
+                    onPressed: gameHasStarted
+                        ? () => stopGame()
+                        : () {
+                            howtoplay();
+                            //startGame();
+                          },
+                    child: Padding(
+                      padding: screenHeight>400 ? EdgeInsets.only() : EdgeInsets.only(top: 4, bottom: 8),
+                      child: Text(gameHasStarted ? 'Stop' : 'Play',
+                          style: TextStyle(fontSize: 16)),
+                    ),
+                  ),
+                ),
+              ),
+              Text('বাগ থাকলে জিতুকে জানাও',
+                  style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+            ]),
+          ),
         ),
       ),
     );
