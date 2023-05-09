@@ -11,7 +11,8 @@ class BlankPixel extends StatelessWidget {
         height: 1,
         width: 1,
         decoration: BoxDecoration(
-            color: Colors.grey[900],
+            //color: Colors.grey[900],
+            color: Colors.black12,
             borderRadius: BorderRadius.circular(4)
 
         ),

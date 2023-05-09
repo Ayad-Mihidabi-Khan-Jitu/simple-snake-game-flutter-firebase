@@ -16,15 +16,27 @@ class HighScoreTile extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.done) {
           Map<String, dynamic> data =
               snapshot.data!.data() as Map<String, dynamic>;
-          return Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(data['score'].toString(),style: const TextStyle(color: Colors.yellow)),
-              const SizedBox(width: 10,),
-              Text(data['name'],style: const TextStyle(color: Colors.yellow)),
+              Text(
+                data['score'].toString(),
+                style: const TextStyle(color: Colors.yellow),
+                overflow: TextOverflow.ellipsis,
+                softWrap: false,
+              ),
+              const SizedBox(
+                width: 10,
+              ),
+              Text(
+                data['name'],
+                style: const TextStyle(color: Colors.yellow),
+                overflow: TextOverflow.ellipsis,
+                softWrap: false,
+              ),
             ],
           );
-        }
-        else {
+        } else {
           return Text('Loading...');
         }
       },

@@ -1,8 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_email_sender/flutter_email_sender.dart';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'highscore_tile.dart';
@@ -41,6 +44,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   //player name textfield controller
   final _playerNameController = TextEditingController();
+  final _bugReportTextController = TextEditingController();
+  final _playerEmailTextController = TextEditingController();
 
   var time;
 
@@ -86,6 +91,40 @@ class _HomeScreenState extends State<HomeScreen> {
         .then((value) => value.docs.forEach((element) {
               highScoreDocIds.add(element.reference.id);
             }));
+  }
+
+  //Email sending
+  Future<void> sendEmail(
+      {required String name,
+      required String email,
+      required String subject,
+      required String message}) async {
+    final serviceId = 'service_9lca0mc';
+    final templateId = 'template_oglglom';
+    final userId = 'H_JAtxEIotTxiI14V'; //public key
+    final url = Uri.parse('https://api.emailjs.com/api/v1.0/email/send');
+    final response = await http.post(url,
+        headers: {
+          'origin': 'http://localhost',
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({
+          'service_id': serviceId,
+          'template_id': templateId,
+          'user_id': userId,
+          'template_params': {
+            'user_name': name,
+            'user_email': email,
+            'user_subject': subject,
+            'user_message': message,
+          }
+        }));
+    print(response.body);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(response.body),
+      ),
+    );
   }
 
   //start game function
@@ -141,6 +180,57 @@ class _HomeScreenState extends State<HomeScreen> {
                     newGame();
                   },
                   child: const Text('Submit'))
+            ],
+          );
+        });
+  }
+
+  void displayBugReportDialog() {
+    showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) {
+          return AlertDialog(
+            elevation: 5,
+            shadowColor: Colors.pinkAccent,
+            backgroundColor: Colors.black,
+            title: const Text('Report Here'),
+            content: SizedBox(
+              height: 100,
+              child: Column(
+                children: [
+                  //Text('Your Score is ${currentScore.toString()}'),
+                  TextField(
+                    controller: _bugReportTextController,
+                    decoration:
+                        InputDecoration(hintText: 'Write the problem here..'),
+                  ),
+                  TextField(
+                    controller: _playerEmailTextController,
+                    decoration: InputDecoration(hintText: 'Your Email'),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              MaterialButton(
+                  color: Colors.red,
+                  onPressed: () {
+                    Navigator.pop(context);
+                    //send email
+                    sendEmail(
+                        email: _playerEmailTextController.text,
+                        name: _playerNameController.text,
+                        message: _bugReportTextController.text,
+                        subject: 'bug snake game');
+                  },
+                  child: const Text('Report')),
+              MaterialButton(
+                  color: Colors.green,
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Cancel'))
             ],
           );
         });
@@ -286,7 +376,7 @@ class _HomeScreenState extends State<HomeScreen> {
     double screenHeight = MediaQuery.of(context).size.height;
     return SafeArea(
       child: Scaffold(
-        backgroundColor: Colors.black,
+        backgroundColor: Colors.green,
         body: RawKeyboardListener(
           focusNode: FocusNode(),
           autofocus: true,
@@ -343,7 +433,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   future: letsGetDocIds,
                                   builder: (context, snapshot) {
                                     return ListView.builder(
-                                      shrinkWrap: true,
+                                        shrinkWrap: true,
                                         scrollDirection: Axis.vertical,
                                         itemCount: highScoreDocIds.length,
                                         itemBuilder: (context, index) {
@@ -419,15 +509,23 @@ class _HomeScreenState extends State<HomeScreen> {
                             //startGame();
                           },
                     child: Padding(
-                      padding: screenHeight>400 ? EdgeInsets.only() : EdgeInsets.only(top: 4, bottom: 8),
+                      padding: screenHeight > 400
+                          ? EdgeInsets.only()
+                          : EdgeInsets.only(top: 4, bottom: 8),
                       child: Text(gameHasStarted ? 'Stop' : 'Play',
                           style: TextStyle(fontSize: 16)),
                     ),
                   ),
                 ),
               ),
-              Text('বাগ থাকলে জিতুকে জানাও',
-                  style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+              OutlinedButton(
+                onPressed: () {
+                  stopGame();
+                  displayBugReportDialog();
+                },
+                child: Text('বাগ থাকলে জিতুকে জানাও',
+                    style: TextStyle(fontSize: 14, color: Colors.grey[400])),
+              ),
             ]),
           ),
         ),

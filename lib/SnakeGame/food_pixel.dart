@@ -10,8 +10,9 @@ class FoodPixel extends StatelessWidget {
       child: Container(
         height: 1,
         width: 1,
+        child: Image.asset('assets/images/food_frog.png'),
         decoration: BoxDecoration(
-            color: Colors.green,
+            //color: Colors.green,
             borderRadius: BorderRadius.circular(4)
 
         ),
