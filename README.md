@@ -1,7 +1,7 @@
 # snake_game
 
 A snake game in flutter with firebase
-Click here for playing the game: snakegame-9067b.web.app
+Click here for playing the game: [Snake Game](https://snakegame-9067b.web.app/)
 
 ## Getting Started
 
